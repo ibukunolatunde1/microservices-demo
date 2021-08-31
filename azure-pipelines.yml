@@ -45,7 +45,7 @@ stages:
   displayName: 'Deploy to Dev Environment'
   dependsOn: Build
   jobs:
-  - deployment: currency-deploy-dev
+  - deployment: currency_deploy_dev
     pool:
       vmImage: ubuntu-latest
     strategy:
@@ -59,8 +59,16 @@ stages:
               command: load
               arguments: '--input $(Pipeline.Workspace)/ContainerImage/currency_$(tag).image.tar'
           - task: Docker@2
+            displayName: 'ReTag Image with ACR Name - BuildId'
+            inputs:
+              containerRegistry: DevContainer # This comes from the Service Connections
+              repository: currency
+              command: tag
+              arguments: 'currency:$(tag) testuim.azurecr.io/currency:$(tag)' 
+          - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
               containerRegistry: DevContainer
               repository: currency
               command: push
+              tags: $(tag)
