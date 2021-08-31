@@ -23,6 +23,7 @@ stages:
     - task: Docker@2
       displayName: Build an image
       inputs:
+        repository: currency
         command: build
         dockerfile: '$(Build.SourcesDirectory)/src/currencyservice/Dockerfile'
         tags: |
