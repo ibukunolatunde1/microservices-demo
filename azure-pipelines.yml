@@ -40,3 +40,27 @@ stages:
       inputs:
         path: '$(Build.ArtifactStagingDirectory)'
         artifact: 'ContainerImage'
+
+- stage: 'Dev'
+  displayName: 'Deploy to Dev Environment'
+  dependsOn: Build
+  jobs:
+  - deployment: currency-deploy-dev
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: Docker@2
+            displayName: 'Load Image from Tar'
+            inputs:
+              command: load
+              arguments: '--input $(Pipeline.Workspace)/ContainerImage/currency_$(tag).image.tar'
+          - task: Docker@2
+            displayName: 'Push Image to ACR'
+            inputs:
+              containerRegistry: DevContainer
+              repository: currency
+              command: push
