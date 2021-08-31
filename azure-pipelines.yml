@@ -1,0 +1,34 @@
+name: $(Build.SourceBranchName)-$(Date:yyyyMMdd)-$(Rev:r)
+trigger:
+  branches:
+    include:
+    - develop-release
+
+stages:
+  - stage: 'Build'
+    displayName: 'Build the docker image and push to ACR'
+    jobs:
+      - job: 'container_build'
+        displayName: 'Build Job'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: Docker@2
+          displayName: 'Build Image'
+          inputs:
+            repository: currency
+            command: build
+            Dockerfile: 'src/currencyservice/Dockerfile'
+            tags: currency_$(Build.BuildNumber)
+        - task: Docker@2
+          displayName: 'Archive Image'
+          inputs:
+            repository: currency
+            command: save
+            arguments: '--output $(Build.ArtifactStagingDirectory)/currency.image.tar currency:currency_$(Build.BuildNumber)'
+            addPipelineData: false
+        - task: PublishPipelineArtifact@1
+          displayName: 'Publishing Image as Pipeline Artifact'
+          inputs:
+            path: '$(Build.ArtifactStagingDirectory)'
+            artifact: 'ContainerImage'
