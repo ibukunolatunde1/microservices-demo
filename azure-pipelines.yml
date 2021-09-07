@@ -115,7 +115,6 @@ stages:
   dependsOn: QA
   jobs:
   - job: currency_deploy_qa
-    environment: uat
     pool:
       vmImage: ubuntu-latest
     steps:
