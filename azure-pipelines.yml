@@ -11,6 +11,7 @@ resources:
 variables:
   tag: '$(Build.BuildId)'
   containerRegistryDev: 'testuim.azurecr.io'
+  containerRegistryQA: 'testuimqa.azurecr.io'
 
 stages:
 - stage: Build
@@ -67,6 +68,39 @@ stages:
               repository: currency
               command: tag
               arguments: 'currency:$(tag) $(containerRegistryDev)/currency:$(tag)' 
+          - task: Docker@2
+            displayName: 'Push Image to ACR'
+            inputs:
+              containerRegistry: DevContainer
+              repository: currency
+              command: push
+              tags: $(tag)
+              
+- stage: 'QA'
+  displayName: 'Deploy to Dev Environment'
+  dependsOn: Dev
+  jobs:
+  - deployment: currency_deploy_qa
+    environment: qa
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: Docker@2
+            displayName: 'Load Image from Tar'
+            inputs:
+              command: load
+              arguments: '--input $(Pipeline.Workspace)/ContainerImage/currency_$(tag).image.tar'
+          - task: Docker@2
+            displayName: 'ReTag Image with ACR Name - BuildId'
+            inputs:
+              containerRegistry: QAContainer # This comes from the Service Connections
+              repository: currency
+              command: tag
+              arguments: 'currency:$(tag) $(containerRegistryQA)/currency:$(tag)' 
           - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
