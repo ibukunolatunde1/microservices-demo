@@ -9,10 +9,11 @@ resources:
 - repo: self
 
 variables:
+  template: template/vars.yml
   tag: '$(Build.BuildId)'
-  containerRegistryDev: 'testuim.azurecr.io'
-  containerRegistryQA: 'testuimqa.azurecr.io'
-  containerRegistryUAT: 'testuimuat.azurecr.io'
+  # containerRegistryDev: 'testuim.azurecr.io'
+  # containerRegistryQA: 'testuimqa.azurecr.io'
+  # containerRegistryUAT: 'testuimuat.azurecr.io'
 
 stages:
 - stage: Build
@@ -68,7 +69,7 @@ stages:
               containerRegistry: DevContainer # This comes from the Service Connections
               repository: currency
               command: tag
-              arguments: 'currency:$(tag) $(containerRegistryDev)/currency:$(tag)' 
+              arguments: 'currency:$(tag) ${{ variables.containerRegistryDev }}/currency:$(tag)' 
           - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
@@ -101,7 +102,7 @@ stages:
               containerRegistry: QAContainer # This comes from the Service Connections
               repository: currency
               command: tag
-              arguments: 'currency:$(tag) $(containerRegistryQA)/currency:$(tag)' 
+              arguments: 'currency:$(tag) ${{ variables.containerRegistryQA }}/currency:$(tag)' 
           - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
@@ -134,7 +135,7 @@ stages:
               containerRegistry: UatContainer # This comes from the Service Connections
               repository: currency
               command: tag
-              arguments: 'currency:$(tag) $(containerRegistryUAT)/currency:$(tag)' 
+              arguments: 'currency:$(tag) ${{ variables.containerRegistryUAT }}/currency:$(tag)' 
               
           - task: Docker@2
             displayName: 'ReTag Image with ACR Name - latest'
@@ -142,7 +143,7 @@ stages:
               containerRegistry: UatContainer
               repository: currency
               command: tag
-              arguments: 'currency:$(tag) $(containerRegistryUAT)/currency:latest'
+              arguments: 'currency:$(tag) ${{ variables.containerRegistryUAT }}/currency:latest'
           - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
