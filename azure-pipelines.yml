@@ -149,4 +149,6 @@ stages:
               containerRegistry: UatContainer
               repository: currency
               command: push
-              tags: $(tag)
+              tags: |
+                $(tag)
+                latest
