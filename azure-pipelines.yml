@@ -11,7 +11,7 @@ resources:
 variables:
   template: template/vars.yml
   tag: '$(Build.BuildId)'
-  # containerRegistryDev: 'testuim.azurecr.io'
+  containerRegistryDev: 'testuim.azurecr.io'
   # containerRegistryQA: 'testuimqa.azurecr.io'
   # containerRegistryUAT: 'testuimuat.azurecr.io'
 
