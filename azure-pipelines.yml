@@ -69,7 +69,7 @@ stages:
               containerRegistry: DevContainer # This comes from the Service Connections
               repository: dev/currency
               command: tag
-              arguments: 'currency:$(tag) ${{ variables.containerRegistryDev }}/dev/currency:$(tag)' 
+              arguments: 'dev/currency:$(tag) ${{ variables.containerRegistryDev }}/dev/currency:$(tag)' 
           - task: Docker@2
             displayName: 'Push Image to ACR'
             inputs:
