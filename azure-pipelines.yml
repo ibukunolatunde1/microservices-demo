@@ -37,7 +37,7 @@ stages:
       inputs:
         repository: dev/currency
         command: save
-        arguments: '--output $(Build.ArtifactStagingDirectory)/currency_$(tag).image.tar currency:$(tag)'
+        arguments: '--output $(Build.ArtifactStagingDirectory)/currency_$(tag).image.tar dev/currency:$(tag)'
         addPipelineData: false
     - task: PublishPipelineArtifact@1
       displayName: 'Publishing Image as Pipeline Artifact'
