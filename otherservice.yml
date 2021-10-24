@@ -23,7 +23,7 @@ resources:
 # Download all the images and retag with maybe buildID & latest
 variables:
 - name: registry
-  value:  testuim.azurecr.io
+  value:  DevContainer
 # - name: repository
 #   value:  $(resources.container.${{ service }}.repository)
 # - name: image_tag
@@ -71,7 +71,7 @@ stages:
             tags: |
               ${{ variables.image_tag }}_rc
               latest
-              
+
 # - stage: 'DeployService'
 #   jobs:
 #   - job: 'deployservice'
