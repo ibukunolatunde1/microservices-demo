@@ -42,12 +42,18 @@ stages:
       pool:
         vmImage: ubuntu-latest
       steps:
+      - task: Docker@2
+        displayName: 'Pull Image from QA ACR'
+        inputs:
+          command: images
       - ${{ each service in parameters.services }}:
-        - task: Docker@2
-          displayName: 'Pull Image from QA ACR'
-          inputs:
-            command: pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
+        # - task: Docker@2
+        #   displayName: 'Pull Image from QA ACR'
+        #   inputs:
+        #     command: images
+            # command: pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
             # argument: $(registry)/qa/${{ service }}:$(image_tag)
+        - script: docker pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
         - task: Docker@2
           displayName: 'Retag Image'
           inputs:
