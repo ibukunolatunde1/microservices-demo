@@ -46,7 +46,7 @@ stages:
         - task: Docker@2
           displayName: 'Pull Image from QA ACR'
           inputs:
-            command: pull $(registry)/qa/${{ service }}:$(image_tag)
+            command: pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
             # argument: $(registry)/qa/${{ service }}:$(image_tag)
         - task: Docker@2
           displayName: 'Retag Image'
