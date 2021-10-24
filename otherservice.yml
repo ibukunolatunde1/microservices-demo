@@ -1,155 +1,92 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
-trigger:
-- master
+# Get the resources and all the images in the repo and their deployment order
+parameters:
+  name: services
+  type: object
+  default: ['currency', 'payment']
 
 resources:
-- repo: self
+  containers:
+  - container: currency
+    type: ACR
+    azureSubscription: SubServiceConnection
+    resourceGroup: devops-test-rg
+    registry: testuim
+    repository: qa/currency
+  - container: payment
+    type: ACR
+    azureSubscription: SubServiceConnection
+    resourceGroup: devops-test-rg
+    registry: testuim
+    repository: qa/payment
+# Deployment Steps as follows
 
+# Download all the images and retag with maybe buildID & latest
 variables:
-  template: template/vars.yml
-  tag: '$(Build.BuildId)'
-  containerRegistryDev: 'testuim.azurecr.io'
-  # containerRegistryQA: 'testuimqa.azurecr.io'
-  # containerRegistryUAT: 'testuimuat.azurecr.io'
+- name: registry
+  value:  $(resources.container.${{ service }}.registry)
+- name: repository
+  value:  $(resources.container.${{ service }}.repository)
+- name: image_tag
+  value: $(resources.container.${{ service }}.tag)
+- name: containerRegistryURL
+  value: acrt01.azurecr.io
+# - name: repository
+#   value: ${{ parameters.service }}
+
+# Send the image to ACR03
 
 stages:
-- stage: Build
-  displayName: Build image
+- stage: 'Pull Latest to UAT ACR'
   jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        repository: payment
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/src/paymentservice/Dockerfile'
-        tags: |
-          $(tag)
-    - task: Docker@2
-      displayName: 'Archive Image'
-      inputs:
-        repository: payment
-        command: save
-        arguments: '--output $(Build.ArtifactStagingDirectory)/payment_$(tag).image.tar payment:$(tag)'
-        addPipelineData: false
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publishing Image as Pipeline Artifact'
-      inputs:
-        path: '$(Build.ArtifactStagingDirectory)'
-        artifact: 'ContainerImage'
-
-- stage: 'Dev'
-  displayName: 'Deploy to Dev Environment'
-  dependsOn: Build
-  jobs:
-  - deployment: payment_deploy_dev
-    environment: dev
-    pool:
-      vmImage: ubuntu-latest
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - checkout: self
-          - task: Docker@2
-            displayName: 'Load Image from Tar'
-            inputs:
-              command: load
-              arguments: '--input $(Pipeline.Workspace)/ContainerImage/payment_$(tag).image.tar'
-          - task: Docker@2
-            displayName: 'ReTag Image with ACR Name - BuildId'
-            inputs:
-              containerRegistry: DevContainer # This comes from the Service Connections
-              repository: dev/payment
-              command: tag
-              arguments: 'payment:$(tag) ${{ variables.containerRegistryDev }}/dev/payment:$(tag)' 
-          - task: Docker@2
-            displayName: 'Push Image to ACR'
-            inputs:
-              containerRegistry: DevContainer
-              repository: dev/payment
-              command: push
-              tags: $(tag)
-              
-- stage: 'QA'
-  displayName: 'Deploy to Dev Environment'
-  dependsOn: Dev
-  jobs:
-  - deployment: payment_deploy_qa
-    environment: qa
-    pool:
-      vmImage: ubuntu-latest
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - checkout: self
-          - task: Docker@2
-            displayName: 'Load Image from Tar'
-            inputs:
-              command: load
-              arguments: '--input $(Pipeline.Workspace)/ContainerImage/payment_$(tag).image.tar'
-          - task: Docker@2
-            displayName: 'ReTag Image with ACR Name - BuildId'
-            inputs:
-              containerRegistry: DevContainer # This comes from the Service Connections
-              repository: qa/payment
-              command: tag
-              arguments: 'payment:$(tag) ${{ variables.containerRegistryDev }}/qa/payment:$(tag)' 
-          - task: Docker@2
-            displayName: 'Push Image to ACR'
-            inputs:
-              containerRegistry: DevContainer
-              repository: qa/payment
-              command: push
-              tags: $(tag)
-              
-- stage: 'UAT'
-  displayName: 'Deploy to Dev Environment'
-  dependsOn: QA
-  jobs:
-   - deployment: payment_deploy_uat
-     environment: uat
-     pool:
-      vmImage: ubuntu-latest
-     strategy:
-       runOnce:
-         deploy:
-          steps:
-          - checkout: self
-          - task: Docker@2
-            displayName: 'Load Image from Tar'
-            inputs:
-              command: load
-              arguments: '--input $(Pipeline.Workspace)/ContainerImage/payment_$(tag).image.tar'
-          - task: Docker@2
-            displayName: 'ReTag Image with ACR Name - BuildId'
-            inputs:
-              containerRegistry: UatContainer # This comes from the Service Connections
-              repository: uat/payment
-              command: tag
-              arguments: 'payment:$(tag) ${{ variables.containerRegistryDev }}/uat/payment:$(tag)' 
-              
-          - task: Docker@2
-            displayName: 'ReTag Image with ACR Name - latest'
-            inputs:
-              containerRegistry: DevContainer
-              repository: uat/payment
-              command: tag
-              arguments: 'payment:$(tag) ${{ variables.containerRegistryDev }}/uat/payment:latest'
-          - task: Docker@2
-            displayName: 'Push Image to ACR'
-            inputs:
-              containerRegistry: DevContainer
-              repository: uat/payment
-              command: push
-              tags: |
-                $(tag)
-                latest
+    - job: 'PullUAT'
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - ${{ each service in parameters.services }}:
+        - task: Docker@2
+          displayName: 'Pull Image from QA ACR'
+          inputs:
+            command: pull
+            argument: $(registry)/$(repository)/${{ service }}:$(image_tag)
+        - task: Docker@2
+          displayName: 'Retag Image'
+          inputs:
+            command: tag
+            containerRegistry: ${{ variables.registry }}
+            repository: ${{ variables.repository }}
+            arguments: '${{ service }}:${{ variables.image_tag }} ${{ variables.containerRegistryURL }}/uat/${{ service }}:${{ variables.image_tag }}_rc'
+        - task: Docker@2
+          displayName: 'Retag Image'
+          inputs:
+            command: tag
+            containerRegistry: ${{ variables.registry }}
+            repository: ${{ variables.repository }}
+            arguments: '${{ service }}:${{ variables.image_tag }} ${{ variables.containerRegistryURL }}/uat/${{ service }}:latest'
+        - task: Docker@2
+          displayName: 'Push Image to ACR'
+          inputs:
+            containerRegistry: acrt01
+            repository: uat/${{ service }}
+            command: push
+            tags: |
+              ${{ variables.image_tag }}_rc
+              latest
+# - stage: 'DeployService'
+#   jobs:
+#   - job: 'deployservice'
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - ${{ each service in parameters.services }}:
+#       # - task: HelmDeploy@0
+#       #   inputs:
+#       #     azureSubscription:
+#       #     azureResourceGroup:
+#       #     kubernetesCluster:
+#       #     namespace:
+#       #     chartType:
+#       #     chartPath: $(Build.SourcesDirectory)/HUGO/${{ parameter.service }}_directory
+#       #     valueFile:
+#       #     releaseName: ${{ parameters.service }}
+#       #     arguments: --set=env=${{ parameters.kubeNamespace }},image.repository=${{ parameters.service }},image.tag=$(resources.container.${{ parameters.service }}.tag)
+#       - script: echo "Running ${{ service }} now"        
