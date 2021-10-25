@@ -51,7 +51,7 @@ stages:
         displayName: 'Pull Image from QA ACR'
         inputs:
           command: images
-          containerRegistry: TestContainer
+          containerRegistry: TestingContainer
       - ${{ each service in parameters.services }}:
         # - task: Docker@2
         #   displayName: 'Pull Image from QA ACR'
