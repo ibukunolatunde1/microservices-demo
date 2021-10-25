@@ -54,7 +54,7 @@ stages:
             # command: pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
             # argument: $(registry)/qa/${{ service }}:$(image_tag)
         - script: |
-            docker login testuim.azurecr.io --username 'dockeracrpull' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
+            docker login testuim.azurecr.io --username 'c9f2fea9-9e40-42c2-af7e-d74c6e7183d7' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
             docker pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
         - task: Docker@2
           displayName: 'Retag Image'
