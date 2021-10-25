@@ -57,7 +57,6 @@ stages:
             docker login testuim.azurecr.io --username 'c9f2fea9-9e40-42c2-af7e-d74c6e7183d7' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
             docker login acrt01.azurecr.io --username 'c9f2fea9-9e40-42c2-af7e-d74c6e7183d7' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
             docker pull testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag)
-            docker tag testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag) ${{ variables.containerRegistryURL }}/uat/${{ service }}:$(resources.container.${{ service }}.tag)_rc'
             docker tag testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag) ${{ variables.containerRegistryURL }}/uat/${{ service }}:latest'
             docker image push --all-tags ${{ variables.containerRegistryURL }}/uat/${{ service }}
           workingDirectory: $(Build.SourcesDirectory)
@@ -68,6 +67,9 @@ stages:
         #     containerRegistry: ${{ variables.registry }}
         #     repository: qa/${{ service }}
         #     arguments: '${{ service }}:$(resources.container.${{ service }}.tag) ${{ variables.containerRegistryURL }}/uat/${{ service }}:$(resources.container.${{ service }}.tag)_rc'
+            # docker tag testuim.azurecr.io/qa/${{ service }}:$(resources.container.${{ service }}.tag) ${{ variables.containerRegistryURL }}/uat/${{ service }}:$(resources.container.${{ service }}.tag)_rc'
+
+
         # - task: Docker@2
         #   displayName: 'Retag Image'
         #   inputs:
