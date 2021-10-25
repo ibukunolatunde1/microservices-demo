@@ -61,6 +61,9 @@ stages:
             # argument: $(registry)/qa/${{ service }}:$(image_tag)
         - script: |
             echo ${{ service }}
+            echo $(resources.container.${{ service }}.registry)
+            echo $(resources.container.${{ service }}.repository)
+            echo $(resources.container.${{ service }}.URI)
             echo $(resources.container.${{ service }}.tag)
             # docker login testuim.azurecr.io --username 'c9f2fea9-9e40-42c2-af7e-d74c6e7183d7' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
             # docker login acrt01.azurecr.io --username 'c9f2fea9-9e40-42c2-af7e-d74c6e7183d7' --password '3CJ7Q~N5yw1I4c1NKF_c2Dg4iUnSPDIaJzJwA' 
